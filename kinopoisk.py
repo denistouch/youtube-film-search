@@ -1,5 +1,3 @@
-import re
-
 import requests
 
 import cache
@@ -12,11 +10,14 @@ class Movie:
         self.alternative_name = alternative_name
         self.year = year
 
-    def as_text(self) -> str:
-        return f"{self.name} ({self.year})"
+    def name_with_year(self) -> str:
+        return f'{self.name if self.name else self.alternative_name} ({self.year})'
+
+    def alternative_name_with_year(self) -> str:
+        return f'{self.alternative_name if self.alternative_name else self.name} ({self.year})'
 
     def as_text_with_link(self) -> str:
-        return f"{self.as_text()}\nhttps://www.kinopoisk.ru/film/{self.id}"
+        return f"{self.name_with_year()}\nhttps://www.kinopoisk.ru/film/{self.id}"
 
 
 class Api:
@@ -64,8 +65,3 @@ def _parse_movie_data(movie_data: dict) -> Movie:
         movie_data.get("alternativeName"),
         movie_data.get("year"),
     )
-
-# Пример использования:
-# api = KinopoiskAPI(api_key="6P96QDJ-ZK243SP-NM320FM-HMT4R1Z")
-# result = api.movie_search("Значит, война (2012)", page=1, limit=10)
-# print(json.dumps(result, indent=2, ensure_ascii=False))

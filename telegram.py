@@ -31,7 +31,7 @@ async def echo_handler(message: Message) -> None:
                 await message.reply(answer)
                 logging.info(_mark_user_action(message, answer))
     except Exception as e:
-        logging.error(_mark_user_action(message, str(e)), e)
+        logging.exception(_mark_user_action(message, str(e)))
 
 
 def _extract_url(message: Message) -> str | None:
@@ -53,5 +53,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-
     asyncio.run(main())

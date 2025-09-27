@@ -79,11 +79,15 @@ class _Api:
 class Assistant:
     _system_prompt: str = None
     _data_separator: str = None
+    _high_relevant_marker: str = None
+    _low_relevant_marker: str = None
     _api: _Api = None
 
     def __init__(self,
                  system_prompt: str,
                  data_separator: str,
+                 high_relevant_marker: str,
+                 low_relevant_marker: str,
                  base_url: str,
                  model: str,
                  temperature: float,
@@ -93,6 +97,8 @@ class Assistant:
                  ):
         self._system_prompt = system_prompt
         self._data_separator = data_separator
+        self._high_relevant_marker = high_relevant_marker
+        self._low_relevant_marker = low_relevant_marker
         self.api = _Api(
             base_url,
             model,
@@ -102,14 +108,15 @@ class Assistant:
             storage
         )
 
-    def find_film_name(self, tokens: list[str]) -> str | None:
+    def find_film_name(self, high_relevant_tokens: list[str], tokens: list[str]) -> str | None:
         try:
-            return self.api.answer(self._build_prompt(tokens), self._system_prompt).replace("\n", "")
+            return (self.api.answer(self._build_prompt(high_relevant_tokens, tokens), self._system_prompt)
+                    .replace("\n", ""))
         except AssistantException:
             return None
 
-    def _build_prompt(self, tokens: list[str]) -> str:
-        return f"\n\n{self._data_separator.join(tokens)}\n\n"
+    def _build_prompt(self, high_relevant_tokens: list[str], tokens: list[str]) -> str:
+        return f"{self._high_relevant_marker}{self._data_separator.join(high_relevant_tokens)}{self._low_relevant_marker}{self._data_separator.join(tokens)}\n\n"
 
 
 class AssistantException(Exception):

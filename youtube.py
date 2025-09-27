@@ -59,6 +59,41 @@ def parse_video_id_by_link(link: str) -> str | None:
     return None
 
 
+def _filter_owner_comments(_thread: dict, _chanel_id) -> list[str]:
+    _comments = []
+    for item in _thread.get("items", []):
+        top_level_comment = item.get("snippet", {}).get("topLevelComment", {}).get("snippet", {})
+        if text := top_level_comment.get("textOriginal"):
+            comment_owner = top_level_comment.get('authorChannelId', {}).get('value', '')
+            if _chanel_id == comment_owner:
+                _comments.append(text)
+
+    return _comments
+
+
+class VideoSummary:
+    video_id: str
+    chanel_id: str
+    title: str
+    description: str | None
+    owner_comments: list[str]
+    relevant_comments: list[str]
+
+    def __init__(self, _video_id: str,
+                 _chanel_id: str,
+                 _title: str,
+                 _description: str | None,
+                 _owner_comments: list[str],
+                 _relevant_comments: list[str]
+                 ):
+        self.video_id = _video_id
+        self.chanel_id = _chanel_id
+        self.title = _title
+        self.description = _description
+        self.owner_comments = _owner_comments
+        self.relevant_comments = _relevant_comments
+
+
 class Api:
     _youtube = None
     _limiter = None
@@ -70,6 +105,26 @@ class Api:
         )
         self._limiter = limiter
         self._cache = storage
+
+    def get_video_summary_by_id(self, video_id: str, max_comments: int) -> VideoSummary | None:
+        try:
+            chanel_id = self.parse_video_data(video_id, "channelId")
+
+            return VideoSummary(
+                video_id,
+                chanel_id,
+                self.parse_video_data(video_id, "title"),
+                self.parse_video_data(video_id, "description"),
+                self.parse_owner_comments(video_id, chanel_id),
+                self.parse_video_comments(video_id, max_comments)
+            )
+        except YoutubeException as e:
+            print({
+                "video_id": video_id,
+                "reason": e.reason,
+                "code": e.code
+            })
+            return None
 
     def parse_video_data(self, video_id: str, snippet_property: str = None):
         video = self._fetch_video(video_id)
@@ -83,10 +138,10 @@ class Api:
         return ""
 
     def parse_owner_comments(self, video_id, channel_id, max_comments=100) -> list[str]:
-        comments = self._filter_owner_comments(self._fetch_comments(video_id, max_comments), channel_id)
+        comments = _filter_owner_comments(self._fetch_comments(video_id, max_comments), channel_id)
 
         if len(comments) == 0:
-            comments = self._filter_owner_comments(self._fetch_comments(video_id, max_comments, "time"), channel_id)
+            comments = _filter_owner_comments(self._fetch_comments(video_id, max_comments, "time"), channel_id)
 
         return comments
 
@@ -99,44 +154,6 @@ class Api:
                 comments.append(text)
 
         return comments
-
-    def get_video_summary_by_id(self, video_id: str, max_comments: int) -> list | None:
-        try:
-            summary = []
-            title = self.parse_video_data(video_id, "title")
-            description = self.parse_video_data(video_id, "description")
-            chanel_id = self.parse_video_data(video_id, "channelId")
-            owner_comments = self.parse_owner_comments(video_id, chanel_id)
-            relevant_comments = self.parse_video_comments(video_id, max_comments)
-
-            if title:
-                summary.append(title)
-            if description:
-                summary.append(description)
-            if owner_comments:
-                summary = summary + owner_comments
-            if relevant_comments:
-                summary = summary + relevant_comments
-
-            return summary
-        except YoutubeException as e:
-            print({
-                "video_id": video_id,
-                "reason": e.reason,
-                "code": e.code
-            })
-            return None
-
-    def _filter_owner_comments(self, _thread: dict, _chanel_id) -> list[str]:
-        _comments = []
-        for item in _thread.get("items", []):
-            top_level_comment = item.get("snippet", {}).get("topLevelComment", {}).get("snippet", {})
-            if text := top_level_comment.get("textOriginal"):
-                comment_owner = top_level_comment.get('authorChannelId', {}).get('value', '')
-                if _chanel_id == comment_owner:
-                    _comments.append(text)
-
-        return _comments
 
     def _fetch_video(self, video_id: str) -> dict:
         try:
