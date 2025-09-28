@@ -16,9 +16,6 @@ youtube_api = youtube.Api(
 )
 assistant = ai.Assistant(
     config.AI_SYSTEM_PROMPT,
-    config.AI_DATA_SEPARATOR,
-    config.AI_HIGH_RELEVANT_DATA_MARKER,
-    config.AI_LOW_RELEVANT_DATA_MARKER,
     config.AI_BASE_URL,
     config.AI_MODEL,
     config.AI_TEMPERATURE,
@@ -43,23 +40,20 @@ def prepare_answer(link: str, username: str) -> tuple[str | None, str | None]:
         logging.warning(f'{username}: summary not build', video_id)
         return None, config.TELEGRAM_BOT_ERROR_NOT_FOUND_VIDEO_ID
 
-    high_relevant_data = [summary.title, summary.description] + summary.owner_comments
-    if not (assistant_movie := assistant.find_film_name(high_relevant_data, summary.relevant_comments)):
+    if not (assistant_movie := assistant.find_film_name_by_summary(wrap_assistant_json(summary))):
         logging.warning(f'{username}: assistant not answer', summary)
         return None, config.TELEGRAM_BOT_ERROR_MODEL_UNAVAILABLE
 
     kinopoisk_movie, score = approve_movie(assistant_movie)
     if score < config.MOVIE_NOT_APPROVE_THRESHOLD:
-        logging.warning(
-            f'{username}: assistant: {assistant_movie} kinopoisk: {kinopoisk_movie.name_with_year()} score: {score}')
+        logging.warning(f'{username}: ai:{assistant_movie} kinopoisk:{kinopoisk_movie.name_with_year()} score:{score}')
         return None, build_not_approved_movie_msg(assistant_movie)
 
     if score < config.MOVIE_HALF_APPROVE_THRESHOLD:
-        logging.warning(
-            f'{username}: assistant: {assistant_movie} kinopoisk: {kinopoisk_movie.name_with_year()} score: {score}')
+        logging.warning(f'{username}: ai:{assistant_movie} kinopoisk:{kinopoisk_movie.name_with_year()} score:{score}')
         return None, build_half_approved_movie_msg(assistant_movie, kinopoisk_movie.name_with_year())
 
-    logging.info(f'{username}: assistant: {assistant_movie} kinopoisk: {kinopoisk_movie.name_with_year()} score: {score}')
+    logging.info(f'{username}: ai:{assistant_movie} kinopoisk:{kinopoisk_movie.name_with_year()} score:{score}')
     return kinopoisk_movie.as_text_with_link(), None
 
 
@@ -86,3 +80,12 @@ def get_hello_message() -> str:
 
 def get_telegram_bot_token() -> str:
     return config.TELEGRAM_BOT_TOKEN
+
+
+def wrap_assistant_json(summary: youtube.VideoSummary) -> str:
+    return f'''
+        "title": "{summary.title}",
+        "description": "{summary.description}",
+        "owner_comments": "{summary.owner_comments}",
+        "top_comments": "{summary.relevant_comments}",
+    '''
