@@ -32,7 +32,7 @@ class Api:
     def movie_search(self, query: str, page: int = 1, limit: int = 10) -> list[Movie]:
         @cache.with_cache(self._storage)
         def execute(_query) -> list[Movie]:
-            data = self._execute_request(query, page, limit)
+            data = self._execute_request(_query, page, limit)
             if not data["docs"]:
                 return []
 
