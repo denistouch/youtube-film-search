@@ -34,29 +34,31 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 def prepare_answer(link: str, username: str) -> tuple[str | None, str | None]:
     if not (video_id := youtube.parse_video_id_by_link(link)):
-        logging.warning(f'{username}: video_id not found')
+        logging.warning(mark_action(username, 'video_id not found'))
         return None, config.TELEGRAM_BOT_ERROR_NOT_FOUND_VIDEO_ID
 
     if not (summary := youtube_api.get_video_summary_by_id(video_id, config.YOUTUBE_MAX_COMMENTS)):
-        logging.warning(f'{username}: summary not build', video_id)
+        logging.warning(mark_action(username, 'summary not build'), video_id)
         return None, config.TELEGRAM_BOT_ERROR_NOT_FOUND_VIDEO_ID
 
-    if not (assistant_movie := assistant.find_film_name_by_summary(_wrap_assistant_json(summary))):
-        logging.warning(f'{username}: assistant not answer', summary)
+    if not (assistant_movie := assistant.find_movie_by_summary(_wrap_assistant_json(summary))):
+        logging.warning(mark_action(username, 'assistant not answer'), summary)
         return None, config.TELEGRAM_BOT_ERROR_MODEL_UNAVAILABLE
 
     movie, score = approve_movie(assistant_movie, config.MOVIE_HALF_APPROVE_THRESHOLD)
+    logging.debug(_score_log_msg(assistant_movie, movie, score, username), video_id)
     if score < config.MOVIE_NOT_APPROVE_THRESHOLD:
-        logging.warning(
-            f'{username}: ai:{assistant_movie} kinopoisk:{movie.name_with_year() if movie else ''} score:{score}')
         return None, _build_not_approved_movie_msg(assistant_movie)
 
     if score < config.MOVIE_HALF_APPROVE_THRESHOLD:
-        logging.warning(f'{username}: ai:{assistant_movie} kinopoisk:{movie.name_with_year()} score:{score}')
         return None, _build_half_approved_movie_msg(assistant_movie, movie.name_with_year())
 
-    logging.info(f'{username}: ai:{assistant_movie} kinopoisk:{movie.name_with_year()} score:{score}')
     return movie.as_text_with_link(), None
+
+
+def _score_log_msg(assistant_movie: str, movie: kinopoisk.Movie | None, score: int, username: str) -> str:
+    return mark_action(
+        username, f'ai:{assistant_movie} kinopoisk:{movie.name_with_year() if movie else ''} score:{score}')
 
 
 def approve_movie(candidate: str, fast_approve_threshold: int) -> tuple[kinopoisk.Movie | None, int]:
@@ -81,6 +83,10 @@ def get_hello_message() -> str:
 
 def get_telegram_bot_token() -> str:
     return config.TELEGRAM_BOT_TOKEN
+
+
+def mark_action(username: str, action: str) -> str:
+    return f'[{username}]: {action}'
 
 
 def _clean_year(candidate):

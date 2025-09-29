@@ -43,7 +43,7 @@ def _extract_url(message: Message) -> str | None:
 
 
 def _mark_user_action(message: Message, action: str) -> str:
-    return f'[{message.from_user.username}]: {action}'
+    return core.mark_action(message.from_user.username, action)
 
 
 async def main() -> None:

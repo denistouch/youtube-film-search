@@ -1,6 +1,17 @@
+import re
+
 import requests
 
 import cache
+
+
+def normalize_answer(answer: str) -> str:
+    normalized = answer.replace("\n", '')
+
+    if not re.search(r".* ?\(?\d{4}\)?$", normalized):
+        normalized = re.sub(r" \(.*\)$", "", normalized).strip()
+
+    return normalized
 
 
 class _Api:
@@ -99,10 +110,13 @@ class Assistant:
             storage
         )
 
-    def find_film_name_by_summary(self, unescape_json: str) -> str | None:
+    def find_movie_by_summary(self, unescape_json: str, post_process: bool = True) -> str | None:
         try:
-            return (self.api.answer(f'```{unescape_json}```', self._system_prompt)
-                    .replace("\n", ""))
+            answer = self.api.answer(f'```{unescape_json}```', self._system_prompt)
+            if post_process:
+                return normalize_answer(answer)
+
+            return answer
         except AssistantException:
             return None
 
