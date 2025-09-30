@@ -1,0 +1,22 @@
+[project]
+name = "telegram-bot-youtube-api"
+version = "0.1.0"
+description = "Бот пытается определить название фильма по ссылке на YouTube"
+authors = [
+    {name = "denistouch",email = "denistouch@gmail.com"}
+]
+license = {text = "Apache-2.0 license"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests (>=2.32.5,<3.0.0)",
+    "dotenv (>=0.9.9,<0.10.0)",
+    "thefuzz (>=0.22.1,<0.23.0)",
+    "aiogram (>=3.22.0,<4.0.0)",
+    "google-api-python-client (>=2.183.0,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
