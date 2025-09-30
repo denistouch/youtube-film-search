@@ -1,4 +1,3 @@
-import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
@@ -46,11 +45,7 @@ def _mark_user_action(message: Message, action: str) -> str:
     return core.mark_action(message.from_user.username, action)
 
 
-async def main() -> None:
+async def start_polling() -> None:
     telegram_bot_api = Bot(token=core.get_telegram_bot_token(),
                            default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await dp.start_polling(telegram_bot_api)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
