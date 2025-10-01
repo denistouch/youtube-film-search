@@ -1,4 +1,4 @@
-import logging
+import log
 import re
 
 import requests
@@ -119,14 +119,13 @@ class Assistant:
 
             return answer
         except AssistantException as e:
-            logging.exception(e, _id)
+            log.exception(e, _id)
             return None
 
 
 class AssistantException(Exception):
     CODE_MODEL_UNAVAILABLE = 410
     reason: str
-    code: int
 
     def __init__(self, reason: str, code: int):
         self.reason = reason

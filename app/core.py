@@ -1,11 +1,12 @@
-import logging
 import re
 import sys
+import logging
 
 import ai
 import cache
 import config
 import kinopoisk
+import log
 import matcher
 import throttling
 import youtube
@@ -34,22 +35,22 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 def prepare_answer(link: str, username: str, _id: str) -> tuple[str | None, str | None]:
     if not (video_id := youtube.parse_video_id_by_link(link)):
-        logging.warning(mark_action(username, 'video_id not found'), _id)
+        log.warning(mark_action(username, 'video_id not found'), _id)
         return None, config.TELEGRAM_BOT_ERROR_NOT_FOUND_VIDEO_ID
-    logging.debug(mark_action(username, 'found video id'), _id, video_id)
+    log.debug(mark_action(username, 'found video id'), _id, video_id)
 
     if not (summary := youtube_api.get_video_summary_by_id(video_id, config.YOUTUBE_MAX_COMMENTS, _id)):
-        logging.warning(mark_action(username, 'summary not build'), video_id, _id)
+        log.warning(mark_action(username, 'summary not build'), video_id, _id)
         return None, config.TELEGRAM_BOT_ERROR_NOT_FOUND_VIDEO_ID
-    logging.debug(mark_action(username, 'fetch summary'), _id, summary)
+    log.debug(mark_action(username, 'fetch summary'), _id, summary)
 
     if not (assistant_movie := assistant.find_movie_by_summary(_wrap_assistant_json(summary), _id)):
-        logging.warning(mark_action(username, 'assistant not answer'), summary, _id)
+        log.warning(mark_action(username, 'assistant not answer'), summary, _id)
         return None, config.TELEGRAM_BOT_ERROR_MODEL_UNAVAILABLE
-    logging.debug(mark_action(username, 'assistant answered'), _id, assistant_movie)
+    log.debug(mark_action(username, 'assistant answered'), _id, assistant_movie)
 
     movie, score = approve_movie(assistant_movie, config.MOVIE_HALF_APPROVE_THRESHOLD, _id)
-    logging.debug(_score_log_msg(assistant_movie, movie, score, username), video_id, _id)
+    log.debug(_score_log_msg(assistant_movie, movie, score, username), video_id, _id)
 
     if score < config.MOVIE_NOT_APPROVE_THRESHOLD:
         return None, _build_not_approved_movie_msg(assistant_movie)

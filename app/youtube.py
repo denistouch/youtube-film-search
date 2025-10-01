@@ -1,4 +1,4 @@
-import logging
+import log
 import urllib.parse
 from typing import Generator
 
@@ -45,7 +45,7 @@ def _try_extract_id_from_short_link(parsed: urllib.parse.ParseResult) -> str | N
     return None
 
 
-def _try_extract_video_id(parsed: urllib.parse.ParseResult) -> Generator[str | None]:
+def _try_extract_video_id(parsed: urllib.parse.ParseResult) -> Generator[str, None, None]:
     yield _try_extract_id_from_shorts(parsed)
     yield _try_extract_id_from_watch(parsed)
     yield _try_extract_id_from_short_link(parsed)
@@ -121,7 +121,7 @@ class Api:
                 self.parse_video_comments(video_id, max_comments, _id)
             )
         except YoutubeException as e:
-            logging.exception(e, _id)
+            log.exception(e, _id)
             return None
 
     def parse_video_data(self, video_id: str, _id: str):
@@ -165,7 +165,7 @@ class Api:
                                       videoId=video_id,
                                       maxResults=max_comments)
         except googleapiclient.errors.HttpError as e:
-            logging.exception(e, _id)
+            log.exception(e, _id)
             return {}
 
     def _fetch_owner_comments(self, video_id, channel_id, _id: str) -> dict:
@@ -176,7 +176,7 @@ class Api:
                                       videoId=video_id,
                                       allThreadsRelatedToChannelId=channel_id)
         except googleapiclient.errors.HttpError as e:
-            logging.exception(e, _id)
+            log.exception(e, _id)
             return {}
 
     def _execute_list(self, section, **kwargs):

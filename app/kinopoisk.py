@@ -1,4 +1,4 @@
-import logging
+import log
 
 import requests
 
@@ -50,7 +50,7 @@ class Api:
         try:
             return execute(query)
         except Exception as e:
-            logging.exception(e, _id)
+            log.exception(e, _id)
             return []
 
     def _execute_request(self, query: str, page: int = 1, limit: int = 10) -> dict:

@@ -1,44 +1,12 @@
-import abc
 import logging
-from collections import abc
-from dataclasses import is_dataclass, asdict
-from types import SimpleNamespace
-from typing import Any
 from typing import Callable
+from strings import json
 
 _TEST_PREFIX = 'test_'
 
 
-def _jsonable(obj: Any) -> Any:
-    """Рекурсивно преобразует любой объект в JSON-совместимый вид."""
-    if obj is None:
-        return None
-    if isinstance(obj, (str, int, float, bool)):
-        return obj
-    if isinstance(obj, (list, tuple)):
-        return [_jsonable(item) for item in obj]
-    if isinstance(obj, dict):
-        return {_jsonable(k): _jsonable(v) for k, v in obj.items()}
-    if hasattr(obj, '__dict__'):
-        # Объект с __dict__
-        return {k: _jsonable(v) for k, v in vars(obj).items() if not k.startswith('_')}
-    if hasattr(obj, '__slots__'):
-        # Объект с __slots__
-        return {k: _jsonable(getattr(obj, k)) for k in obj.__slots__ if not k.startswith('_')}
-    if is_dataclass(obj):
-        return asdict(obj)
-    if isinstance(obj, SimpleNamespace):
-        return {k: _jsonable(v) for k, v in obj.__dict__.items()}
-    if isinstance(obj, abc.Mapping):
-        return {_jsonable(k): _jsonable(v) for k, v in obj.items()}
-    if isinstance(obj, abc.Iterable) and not isinstance(obj, (str, bytes)):
-        return [_jsonable(item) for item in obj]
-
-    return str(obj)
-
-
 def _build_expected_not_actual(expected, actual) -> str:
-    return f'{_jsonable(expected)} != {_jsonable(actual)}'
+    return f'{json(expected)} != {json(actual)}'
 
 
 def _build_assertion_error(_method, i, e, expected, actual):
@@ -53,14 +21,14 @@ def assert_equals_cases(cases):
                 if len(declaration) == 2:
                     declaration += [None]
                 _args, expected, _message = declaration
-                _expected = _jsonable(expected)
+                _expected = json(expected)
 
                 if isinstance(_args, list):
                     actual = func(*_args)
                 else:
                     actual = func(_args)
 
-                _actual = _jsonable(actual)
+                _actual = json(actual)
                 try:
                     if _message:
                         assert _expected == _actual, _message
