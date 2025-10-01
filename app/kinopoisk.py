@@ -10,7 +10,7 @@ class Movie:
         self.alternative_names = alternative_names
         self.year = year
 
-    def names_with_year(self) -> list[str]:
+    def alternative_names_with_year(self) -> list[str]:
         names = []
         for name in self.alternative_names:
             names.append(f'{name} ({self.year})')

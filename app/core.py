@@ -107,8 +107,8 @@ def _build_half_approved_movie_msg(assistant_answer: str, approver_answer) -> st
 def _get_kinopoisk_movie(candidate: str) -> tuple[kinopoisk.Movie | None, int]:
     movies = kinopoisk_api.movie_search(candidate)
     if movie := movies[0] if len(movies) > 0 else None:
-        score = 0
-        for name in movie.names_with_year():
+        score = matcher.calculate_match_score(candidate, movie.name)
+        for name in movie.alternative_names_with_year():
             score = max(matcher.calculate_match_score(candidate, name), score)
 
         return movie, score
