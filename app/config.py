@@ -3,7 +3,9 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv('/app/.env')
+_DOTENV_PATH = '../.env'
+
+load_dotenv(_DOTENV_PATH)
 
 
 def _get(name: str, default=None, _type: builtins = str):
@@ -29,7 +31,7 @@ YOUTUBE_TIMEOUT_SECONDS = _get("YOUTUBE_TIMEOUT_SECONDS", 1, float)
 YOUTUBE_CACHE_TTL_SECONDS = _get("YOUTUBE_CACHE_TTL_SECONDS", 86400, int)
 
 AI_SYSTEM_PROMPT = _get("AI_SYSTEM_PROMPT")
-AI_BASE_URL = _get("AI_BASE_URL").rstrip("/")
+AI_BASE_URL = _get("AI_BASE_URL", "").rstrip("/")
 AI_MODEL = _get("AI_MODEL")
 AI_TEMPERATURE = _get("AI_TEMPERATURE", _type=float)
 AI_MAX_TOKENS = _get("AI_MAX_TOKENS", _type=int)
@@ -47,7 +49,7 @@ TELEGRAM_BOT_ERROR_HALF_APPPROVED_MOVIE_TEMPLATE = _get("TELEGRAM_BOT_ERROR_HALF
                                                         "movie_half_approved_template")
 
 KINOPOISK_API_KEY = _get("KINOPOISK_API_KEY")
-KINOPOISK_API_BASE_URL = _get("KINOPOISK_API_BASE_URL").rstrip("/")
+KINOPOISK_API_BASE_URL = _get("KINOPOISK_API_BASE_URL", "").rstrip("/")
 KINOPOISK_CACHE_TTL_SECONDS = _get("KINOPOISK_CACHE_TTL_SECONDS", _type=int)
 
 MOVIE_NOT_APPROVE_THRESHOLD = _get('MOVIE_NOT_APPROVE_THRESHOLD', _type=int)
