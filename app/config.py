@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 
-_DOTENV_PATH = '../.env'
+_DOTENV_PATH = '.env'
 
 load_dotenv(_DOTENV_PATH)
 
