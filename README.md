@@ -27,3 +27,7 @@
 - Укажите credentials в `.env`
 - Запустите сервис командой `docker compose up -d --build`
 - Смотрите логи в `docker compose logs -f`
+
+## Демо
+Попробовать как работает можно здесь
+https://t.me/denistouch_youtube_bot
