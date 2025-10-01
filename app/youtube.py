@@ -1,4 +1,6 @@
+import logging
 import urllib.parse
+from typing import Generator
 
 import googleapiclient.discovery
 import googleapiclient.errors
@@ -43,7 +45,7 @@ def _try_extract_id_from_short_link(parsed: urllib.parse.ParseResult) -> str | N
     return None
 
 
-def _try_extract_video_id(parsed: urllib.parse.ParseResult) -> str | None:
+def _try_extract_video_id(parsed: urllib.parse.ParseResult) -> Generator[str | None]:
     yield _try_extract_id_from_shorts(parsed)
     yield _try_extract_id_from_watch(parsed)
     yield _try_extract_id_from_short_link(parsed)
@@ -106,48 +108,40 @@ class Api:
         self._limiter = limiter
         self._cache = storage
 
-    def get_video_summary_by_id(self, video_id: str, max_comments: int) -> VideoSummary | None:
+    def get_video_summary_by_id(self, video_id: str, max_comments: int, _id: str) -> VideoSummary | None:
         try:
-            chanel_id = self.parse_video_data(video_id, "channelId")
+            video = self.parse_video_data(video_id, _id)
 
             return VideoSummary(
                 video_id,
-                chanel_id,
-                self.parse_video_data(video_id, "title"),
-                self.parse_video_data(video_id, "description"),
-                self.parse_owner_comments(video_id, chanel_id),
-                self.parse_video_comments(video_id, max_comments)
+                video.get("channelId", ""),
+                video.get("title", ""),
+                video.get("description", ""),
+                self.parse_owner_comments(video_id, video.get("channelId", ""), _id),
+                self.parse_video_comments(video_id, max_comments, _id)
             )
         except YoutubeException as e:
-            print({
-                "video_id": video_id,
-                "reason": e.reason,
-                "code": e.code
-            })
+            logging.exception(e, _id)
             return None
 
-    def parse_video_data(self, video_id: str, snippet_property: str = None):
+    def parse_video_data(self, video_id: str, _id: str):
         video = self._fetch_video(video_id)
         for item in video.get("items", []):
-            snippet = item.get("snippet", {})
-            if snippet_property is None:
-                return snippet
-            elif snippet_property in snippet:
-                return snippet[snippet_property]
+            return item.get("snippet", {})
 
         return ""
 
-    def parse_owner_comments(self, video_id, channel_id, max_comments=100) -> list[str]:
-        comments = _filter_owner_comments(self._fetch_comments(video_id, max_comments), channel_id)
+    def parse_owner_comments(self, video_id, channel_id, _id: str, max_comments=100) -> list[str]:
+        comments = _filter_owner_comments(self._fetch_comments(video_id, max_comments, "relevance", _id), channel_id)
 
         if len(comments) == 0:
-            comments = _filter_owner_comments(self._fetch_comments(video_id, max_comments, "time"), channel_id)
+            comments = _filter_owner_comments(self._fetch_comments(video_id, max_comments, "time", _id), channel_id)
 
         return comments
 
-    def parse_video_comments(self, video_id, max_comments) -> list[str]:
+    def parse_video_comments(self, video_id, max_comments, _id: str) -> list[str]:
         comments = []
-        thread = self._fetch_comments(video_id, max_comments)
+        thread = self._fetch_comments(video_id, max_comments, "relevance", _id)
         for item in thread.get("items", []):
             top_level_comment = item.get("snippet", {}).get("topLevelComment", {}).get("snippet", {})
             if text := top_level_comment.get("textOriginal"):
@@ -163,17 +157,18 @@ class Api:
         except googleapiclient.errors.HttpError as e:
             raise YoutubeException(e.reason, e.status_code)
 
-    def _fetch_comments(self, video_id: str, max_comments, order="relevance") -> dict:
+    def _fetch_comments(self, video_id: str, max_comments, order, _id: str) -> dict:
         try:
             return self._execute_list("commentThreads",
                                       part="snippet",
                                       order=order,
                                       videoId=video_id,
                                       maxResults=max_comments)
-        except googleapiclient.errors.HttpError:
+        except googleapiclient.errors.HttpError as e:
+            logging.exception(e, _id)
             return {}
 
-    def _fetch_owner_comments(self, video_id, channel_id) -> dict:
+    def _fetch_owner_comments(self, video_id, channel_id, _id: str) -> dict:
         try:
             return self._execute_list("commentThreads",
                                       part="snippet",
@@ -181,6 +176,7 @@ class Api:
                                       videoId=video_id,
                                       allThreadsRelatedToChannelId=channel_id)
         except googleapiclient.errors.HttpError as e:
+            logging.exception(e, _id)
             return {}
 
     def _execute_list(self, section, **kwargs):

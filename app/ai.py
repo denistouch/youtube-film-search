@@ -1,3 +1,4 @@
+import logging
 import re
 
 import requests
@@ -49,7 +50,7 @@ class _Api:
 
                 return self._parse_response(response)
             except requests.exceptions.ConnectionError as e:
-                raise AssistantException("Connection Error", AssistantException.CODE_MODEL_UNAVAILABLE)
+                raise AssistantException(str(e), AssistantException.CODE_MODEL_UNAVAILABLE)
 
         return execute(prompt)
 
@@ -110,14 +111,15 @@ class Assistant:
             storage
         )
 
-    def find_movie_by_summary(self, unescape_json: str, post_process: bool = True) -> str | None:
+    def find_movie_by_summary(self, unescape_json: str, _id: str, post_process: bool = True) -> str | None:
         try:
             answer = self.api.answer(f'```{unescape_json}```', self._system_prompt)
             if post_process:
                 return normalize_answer(answer)
 
             return answer
-        except AssistantException:
+        except AssistantException as e:
+            logging.exception(e, _id)
             return None
 
 

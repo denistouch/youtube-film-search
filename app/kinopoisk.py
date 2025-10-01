@@ -1,3 +1,5 @@
+import logging
+
 import requests
 
 import cache
@@ -32,7 +34,7 @@ class Api:
         self._base_url = base_url
         self._storage = storage
 
-    def movie_search(self, query: str, page: int = 1, limit: int = 10) -> list[Movie]:
+    def movie_search(self, query: str, _id: str, page: int = 1, limit: int = 10) -> list[Movie]:
         @cache.with_cache(self._storage)
         def execute(_query) -> list[Movie]:
             data = self._execute_request(_query, page, limit)
@@ -45,7 +47,11 @@ class Api:
 
             return movies
 
-        return execute(query)
+        try:
+            return execute(query)
+        except Exception as e:
+            logging.exception(e, _id)
+            return []
 
     def _execute_request(self, query: str, page: int = 1, limit: int = 10) -> dict:
         return ((requests.get(f"{self._base_url}/v1.4/movie/search",

@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -19,18 +20,19 @@ async def command_start_handler(message: Message) -> None:
 
 @dp.message()
 async def echo_handler(message: Message) -> None:
-    logging.info(_mark_user_action(message, message.text))
+    _id = str(uuid.uuid4())
+    logging.info(_mark_user_action(message, message.text), _id)
     try:
         if _url := _extract_url(message):
-            answer, err = core.prepare_answer(_url, message.from_user.username)
+            answer, err = core.prepare_answer(_url, message.from_user.username, _id)
             if err:
                 await message.reply(err)
-                logging.warning(_mark_user_action(message, err))
+                logging.warning(_mark_user_action(message, err), _id)
             else:
                 await message.reply(answer)
-                logging.info(_mark_user_action(message, answer))
+                logging.info(_mark_user_action(message, answer), _id)
     except Exception as e:
-        logging.exception(_mark_user_action(message, str(e)))
+        logging.exception(_mark_user_action(message, str(e)), _id)
 
 
 def _extract_url(message: Message) -> str | None:
