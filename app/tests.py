@@ -3,7 +3,6 @@ import copy
 import ai
 import config
 import core
-import kinopoisk
 import test_lib
 
 
@@ -30,6 +29,7 @@ def test_core_prepare_answer(url):
     ['Alice in Borderland (2020)', ['Алиса в Пограничье (2020)', 100]],
     ['Крысиные бега (2001)', ['Крысиные бега (2001)', 100]],
     ['НИКТО (2021)', ['Никто (2021)', 100]],
+    ['911', ['911 (2022)', 100]],
 ])
 def test_core_approve_movie(candidate: str, fast_approve_threshold: int = config.MOVIE_HALF_APPROVE_THRESHOLD):
     movie, score = core.approve_movie(candidate, fast_approve_threshold)
