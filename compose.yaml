@@ -6,5 +6,4 @@ services:
     container_name: telegram-bot-youtube-api
     volumes:
       - .:/app
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    network_mode: host
