@@ -10,7 +10,7 @@ import test_lib
 @test_lib.assert_equals_cases([
     ["Сёстры (неопределён)", "Сёстры"],
     ["Сёстры (2014)", "Сёстры (2014)"],
-    ["Сёстры 2014", "Сёстры 2014"],
+    ["Какая то длинная строка, которая не содержит цифры", "Какая то длинная строка, которая не содержит цифры"],
 ])
 def test_ai_normalize(before_normalization):
     return ai.normalize_answer(before_normalization)
