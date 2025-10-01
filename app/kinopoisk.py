@@ -4,17 +4,21 @@ import cache
 
 
 class Movie:
-    def __init__(self, _id: int, name: str, alternative_name: str | None, year: int):
+    def __init__(self, _id: int, name: str, alternative_names: list, year: int):
         self.id = _id
         self.name = name
-        self.alternative_name = alternative_name
+        self.alternative_names = alternative_names
         self.year = year
 
-    def name_with_year(self) -> str:
-        return f'{self.name if self.name else self.alternative_name} ({self.year})'
+    def names_with_year(self) -> list[str]:
+        names = []
+        for name in self.alternative_names:
+            names.append(f'{name} ({self.year})')
 
-    def alternative_name_with_year(self) -> str:
-        return f'{self.alternative_name if self.alternative_name else self.name} ({self.year})'
+        return names
+
+    def name_with_year(self) -> str:
+        return f'{self.name} ({self.year})'
 
     def as_text_with_link(self) -> str:
         return f"{self.name_with_year()}\nhttps://www.kinopoisk.ru/film/{self.id}"
@@ -59,9 +63,15 @@ class Api:
 
 
 def _parse_movie_data(movie_data: dict) -> Movie:
+    alternative_names = [
+                            movie_data.get("alternativeName", ''),
+                            movie_data.get("enName", '')
+                        ] + [
+                            item.get("name", '') for item in movie_data['names']
+                        ]
     return Movie(
         movie_data.get("id", -1),
         movie_data.get("name"),
-        movie_data.get("alternativeName"),
-        movie_data.get("year"),
+        [name for name in alternative_names if name],
+        movie_data.get("year")
     )

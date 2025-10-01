@@ -68,7 +68,7 @@ def approve_movie(candidate: str, fast_approve_threshold: int) -> tuple[kinopois
 
     candidate_without_year = _clean_year(candidate)
     if candidate_without_year == candidate:
-        return None, 0
+        return movie, score
 
     movie_by_name, score_by_name = _get_kinopoisk_movie(candidate_without_year)
     if score_by_name > score:
@@ -107,8 +107,11 @@ def _build_half_approved_movie_msg(assistant_answer: str, approver_answer) -> st
 def _get_kinopoisk_movie(candidate: str) -> tuple[kinopoisk.Movie | None, int]:
     movies = kinopoisk_api.movie_search(candidate)
     if movie := movies[0] if len(movies) > 0 else None:
-        return movie, max(matcher.calculate_match_score(candidate, movie.name_with_year()),
-                          matcher.calculate_match_score(candidate, movie.alternative_name_with_year()))
+        score = 0
+        for name in movie.names_with_year():
+            score = max(matcher.calculate_match_score(candidate, name), score)
+
+        return movie, score
 
     return None, 0
 
