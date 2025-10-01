@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('/app/.env')
 
 
 def _get(name: str, default=None, _type: builtins = str):
