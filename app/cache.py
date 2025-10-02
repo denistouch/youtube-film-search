@@ -1,5 +1,6 @@
 import time
 import hashlib
+from typing import Dict
 
 import files, serialize
 
@@ -27,8 +28,26 @@ def _key_by_args(*args, **kwargs) -> str:
         return ""
 
 
+class _StorageItem:
+    _data = None
+    _expired_at = None
+
+    def __init__(self, data, ttl=0):
+        self._data = data
+        if ttl != 0:
+            self._expired_at = time.time() + ttl
+
+    def is_expired(self) -> bool:
+        if self._expired_at:
+            return time.time() > self._expired_at
+        return True
+
+    def extract(self):
+        return self._data
+
+
 class Storage:
-    _vault = None
+    _vault: Dict[str, _StorageItem] = None
     _ttl = 0
 
     def __init__(self, default_key_timeout=0, name: str = 'storage'):
@@ -44,12 +63,12 @@ class Storage:
     def get(self, key, default=None):
         item = self._vault.get(key, None)
         if isinstance(item, _StorageItem):
-            if item.is_expired():
-                del self._vault[key]
-            return item.extract()
+            if not item.is_expired():
+                return item.extract()
         return default
 
     def archive(self):
+        self.cleanup()
         files.save_file(files.build_storage_path(self.name), serialize.serialize_bytes(self))
 
     @staticmethod
@@ -57,9 +76,14 @@ class Storage:
         storage = serialize.deserialize_bytes(files.read_file(files.build_storage_path(name)))
         if storage is not None:
             storage._ttl = default_key_timeout
+            storage.cleanup()
             return storage
 
         return Storage(default_key_timeout=default_key_timeout, name=name)
+
+    def cleanup(self):
+        for key in [k for k, v in self._vault.items() if v.is_expired()]:
+            del self._vault[key]
 
 
 def with_cache(storage: Storage):
@@ -78,21 +102,3 @@ def with_cache(storage: Storage):
         return wrapper
 
     return decorator
-
-
-class _StorageItem:
-    _data = None
-    _expired_at = None
-
-    def __init__(self, data, ttl=0):
-        self._data = data
-        if ttl != 0:
-            self._expired_at = time.time() + ttl
-
-    def is_expired(self) -> bool:
-        if self._expired_at:
-            return time.time() > self._expired_at
-        return True
-
-    def extract(self):
-        return self._data
