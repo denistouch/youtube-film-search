@@ -110,7 +110,8 @@ class Api:
 
     def get_video_summary_by_id(self, video_id: str, max_comments: int, _id: str) -> VideoSummary | None:
         try:
-            video = self.parse_video_data(video_id, _id)
+            if not (video := self.parse_video_data(video_id, _id)):
+                return None
 
             return VideoSummary(
                 video_id,
@@ -127,9 +128,9 @@ class Api:
     def parse_video_data(self, video_id: str, _id: str):
         video = self._fetch_video(video_id)
         for item in video.get("items", []):
-            return item.get("snippet", {})
+            return item.get("snippet", None)
 
-        return ""
+        return None
 
     def parse_owner_comments(self, video_id, channel_id, _id: str, max_comments=100) -> list[str]:
         comments = _filter_owner_comments(self._fetch_comments(video_id, max_comments, "relevance", _id), channel_id)
