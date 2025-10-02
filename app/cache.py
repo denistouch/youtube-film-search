@@ -5,8 +5,8 @@ from typing import Dict
 import files, serialize
 
 
-def _md5_hash(input_string) -> str:
-    return hashlib.md5(input_string.encode('utf-8')).hexdigest()
+def _sha256_hash(input_string) -> str:
+    return hashlib.sha256(input_string.encode('utf-8')).hexdigest()
 
 
 def _key_by_args(*args, **kwargs) -> str:
@@ -89,7 +89,7 @@ class Storage:
 def with_cache(storage: Storage):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            key = _md5_hash(_key_by_args(*args, **kwargs))
+            key = _sha256_hash(_key_by_args(*args, **kwargs))
             cached = storage.get(key)
 
             if cached is not None:

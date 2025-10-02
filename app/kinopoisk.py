@@ -39,16 +39,19 @@ class Api:
 
     def movie_search(self, query: str, _id: str, page: int = 1, limit: int = 10) -> list[Movie]:
         @cache.with_cache(self._storage)
-        def execute(_query) -> list[Movie]:
+        def execute(_query) -> list[dict]:
             data = self._execute_request(_query, page, limit)
+            if 'docs' not in data:
+                raise Exception('not found movie data', data)
+
+            return data.get("docs", [])
+
+        try:
             movies = []
-            for movie_data in data.get("docs", []):
+            for movie_data in execute(query):
                 movies.append(_parse_movie_data(movie_data))
 
             return movies
-
-        try:
-            return execute(query)
         except Exception as e:
             log.exception(e, _id)
             return []

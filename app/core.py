@@ -28,7 +28,7 @@ assistant_api = ai.Assistant(
 kinopoisk_api = kinopoisk.Api(
     config.KINOPOISK_API_KEY,
     config.KINOPOISK_API_BASE_URL,
-    cache.Storage.restore(config.AI_CACHE_TTL_SECONDS, 'kinopoisk')
+    cache.Storage.restore(config.KINOPOISK_CACHE_TTL_SECONDS, 'kinopoisk')
 )
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
