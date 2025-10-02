@@ -1,4 +1,5 @@
 import copy
+import uuid
 
 import ai
 import config
@@ -20,7 +21,7 @@ def test_ai_normalize(before_normalization):
      ('Американская семейка (2009)\nhttps://www.kinopoisk.ru/film/472329', None)],
 ])
 def test_core_prepare_answer(url):
-    return core.prepare_answer(url, 'username')
+    return core.prepare_answer(url, 'username', str(uuid.uuid4()))
 
 
 @test_lib.assert_equals_cases([
@@ -32,7 +33,7 @@ def test_core_prepare_answer(url):
     ['911', ['911 (2022)', 100]],
 ])
 def test_core_approve_movie(candidate: str, fast_approve_threshold: int = config.MOVIE_HALF_APPROVE_THRESHOLD):
-    movie, score = core.approve_movie(candidate, fast_approve_threshold)
+    movie, score = core.approve_movie(candidate, fast_approve_threshold, str(uuid.uuid4()))
     return movie.name_with_year(), score
 
 

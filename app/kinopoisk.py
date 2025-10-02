@@ -38,11 +38,8 @@ class Api:
         @cache.with_cache(self._storage)
         def execute(_query) -> list[Movie]:
             data = self._execute_request(_query, page, limit)
-            if not data["docs"]:
-                return []
-
             movies = []
-            for movie_data in data["docs"]:
+            for movie_data in data.get("docs", []):
                 movies.append(_parse_movie_data(movie_data))
 
             return movies
