@@ -54,6 +54,9 @@ class _Api:
 
         return execute(prompt)
 
+    def shutdown(self):
+        self._storage.archive()
+
     def _execute_request(self, json_data: dict) -> dict:
         return (requests.post(f"{self._base_url}/v1/chat/completions",
                               headers={"Content-Type": "application/json"},
@@ -90,7 +93,6 @@ class _Api:
 
 class Assistant:
     _system_prompt: str = None
-    _api: _Api = None
 
     def __init__(self,
                  system_prompt: str,
@@ -102,7 +104,7 @@ class Assistant:
                  storage: cache.Storage,
                  ):
         self._system_prompt = system_prompt
-        self.api = _Api(
+        self._api = _Api(
             base_url,
             model,
             temperature,
@@ -113,7 +115,7 @@ class Assistant:
 
     def find_movie_by_summary(self, unescape_json: str, _id: str, post_process: bool = True) -> str | None:
         try:
-            answer = self.api.answer(f'```{unescape_json}```', self._system_prompt)
+            answer = self._api.answer(f'```{unescape_json}```', self._system_prompt)
             if post_process:
                 return normalize_answer(answer)
 
@@ -122,6 +124,8 @@ class Assistant:
             log.exception(e, _id)
             return None
 
+    def shutdown(self):
+        self._api.shutdown()
 
 class AssistantException(Exception):
     CODE_MODEL_UNAVAILABLE = 410

@@ -99,14 +99,14 @@ class VideoSummary:
 class Api:
     _youtube = None
     _limiter = None
-    _cache = None
+    _storage = None
 
     def __init__(self, api_key, limiter: throttling.RateLimiter, storage: cache.Storage):
         self._youtube = googleapiclient.discovery.build(
             _API_SERVICE_NAME, _API_VERSION, developerKey=api_key
         )
         self._limiter = limiter
-        self._cache = storage
+        self._storage = storage
 
     def get_video_summary_by_id(self, video_id: str, max_comments: int, _id: str) -> VideoSummary | None:
         try:
@@ -149,6 +149,9 @@ class Api:
 
         return comments
 
+    def shutdown(self):
+        self._storage.archive()
+
     def _fetch_video(self, video_id: str) -> dict:
         try:
             return self._execute_list("videos",
@@ -180,7 +183,7 @@ class Api:
             return {}
 
     def _execute_list(self, section, **kwargs):
-        @cache.with_cache(storage=self._cache)
+        @cache.with_cache(storage=self._storage)
         def fetch_data(_section, **_kwargs):
             request = getattr(self._youtube, _section)().list(
                 **_kwargs

@@ -1,10 +1,14 @@
 import copy
+import os
 import uuid
 
 import ai
 import config
 import core
 import test_lib
+import serialize, files
+from cache import Storage
+from kinopoisk import Movie
 
 
 @test_lib.assert_equals_cases([
@@ -37,5 +41,35 @@ def test_core_approve_movie(candidate: str, fast_approve_threshold: int = config
     return movie.name_with_year(), score
 
 
+@test_lib.assert_equals_cases([
+    ['simple string', 'simple string'],
+    [{'key': 'value'}, {'key': 'value'}],
+    [['a', 1, {1, 2, 3}, {'a': 'b', 'c': ['d', 'e']}], ['a', 1, {1, 2, 3}, {'a': 'b', 'c': ['d', 'e']}]],
+    [Movie(1, ['Название'], 2015), Movie(1, ['Название'], 2015)],
+], False)
+def test_serialize(data):
+    serialized = serialize.serialize_bytes(data)
+    return serialize.deserialize_bytes(serialized)
+
+
+def test_cache_stored():
+    cache = Storage(name='tests')
+    key = 'key'
+    data = {'key': 'value'}
+    cache.put('key', data, 30)
+    file = files.build_storage_path(cache.name)
+    cache.archive()
+    assert os.path.exists(file)
+    restored = Storage.restore(name='tests')
+    assert restored.get(key) == data
+    os.remove(file)
+    assert not os.path.exists(file)
+
+def test_cache_restore():
+    cache = Storage.restore(name='ai')
+    assert cache is not None
+
+
 if __name__ == '__main__':
     test_lib.run_tests(copy.copy(globals()))
+    core.shutdown()

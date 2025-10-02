@@ -13,7 +13,7 @@ def _build_assertion_error(_method, i, e, expected, actual):
     return f'{_method} [case #{i}] {str(e)} {_build_expected_not_actual(expected, actual)}'
 
 
-def assert_equals_cases(cases):
+def assert_equals_cases(cases, as_json=True):
     def decorator(func):
         def wrapper(*args, **kwargs):
             errors = []
@@ -21,21 +21,17 @@ def assert_equals_cases(cases):
                 if len(declaration) == 2:
                     declaration += [None]
                 _args, expected, _message = declaration
-                _expected = json(expected)
-
-                if isinstance(_args, list):
-                    actual = func(*_args)
-                else:
-                    actual = func(_args)
-
-                _actual = json(actual)
+                actual = func(_args)
+                if as_json:
+                    expected = json(expected)
+                    actual = json(actual)
                 try:
                     if _message:
-                        assert _expected == _actual, _message
+                        assert expected == actual, _message
                     else:
-                        assert _expected == _actual
+                        assert expected == actual
                 except AssertionError as e:
-                    errors.append(AssertionError(_build_assertion_error(func.__name__, i, e, _expected, _actual)))
+                    errors.append(AssertionError(_build_assertion_error(func.__name__, i, e, expected, actual)))
 
             return errors
 
@@ -54,13 +50,15 @@ def run_tests(_globals: dict, tests_function_prefix=_TEST_PREFIX, logger: loggin
             tests.append([key.replace(tests_function_prefix, ''), value])
 
     for name, test in tests:
-        failed += test()
+        _err = test()
+        if _err:
+            failed += _err
 
     if len(failed) != 0:
         logger.error('Tests ends with errors!')
         for failure in failed:
             logger.exception(repr(failure))
-        exit(1)
+        return
 
     logger.info('All tests passed!')
-    exit(0)
+    return

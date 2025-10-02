@@ -14,21 +14,21 @@ import youtube
 youtube_api = youtube.Api(
     config.YOUTUBE_API_KEY,
     throttling.RateLimiter(config.YOUTUBE_TIMEOUT_SECONDS),
-    cache.Storage(config.YOUTUBE_CACHE_TTL_SECONDS)
+    cache.Storage.restore(config.YOUTUBE_CACHE_TTL_SECONDS, 'youtube')
 )
-assistant = ai.Assistant(
+assistant_api = ai.Assistant(
     config.AI_SYSTEM_PROMPT,
     config.AI_BASE_URL,
     config.AI_MODEL,
     config.AI_TEMPERATURE,
     config.AI_MAX_TOKENS,
     config.AI_STREAM,
-    cache.Storage(config.AI_CACHE_TTL_SECONDS)
+    cache.Storage.restore(config.AI_CACHE_TTL_SECONDS, 'ai')
 )
 kinopoisk_api = kinopoisk.Api(
     config.KINOPOISK_API_KEY,
     config.KINOPOISK_API_BASE_URL,
-    cache.Storage(config.AI_CACHE_TTL_SECONDS)
+    cache.Storage.restore(config.AI_CACHE_TTL_SECONDS, 'kinopoisk')
 )
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
@@ -44,7 +44,7 @@ def prepare_answer(link: str, username: str, _id: str) -> tuple[str | None, str 
         return None, config.TELEGRAM_BOT_ERROR_NOT_FOUND_VIDEO_ID
     log.debug(mark_action(username, 'fetch summary'), _id, summary)
 
-    if not (assistant_movie := assistant.find_movie_by_summary(_wrap_assistant_json(summary), _id)):
+    if not (assistant_movie := assistant_api.find_movie_by_summary(_wrap_assistant_json(summary), _id)):
         log.warning(mark_action(username, 'assistant not answer'), summary, _id)
         return None, config.TELEGRAM_BOT_ERROR_MODEL_UNAVAILABLE
     log.debug(mark_action(username, 'assistant answered'), _id, assistant_movie)
@@ -93,6 +93,10 @@ def get_telegram_bot_token() -> str:
 def mark_action(username: str, action: str) -> str:
     return f'[{username}]: {action}'
 
+def shutdown():
+    youtube_api.shutdown()
+    assistant_api.shutdown()
+    kinopoisk_api.shutdown()
 
 def _clean_year(candidate):
     return re.sub(r'\(?\d+\)?', '', candidate)

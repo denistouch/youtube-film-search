@@ -50,4 +50,8 @@ def _mark_user_action(message: Message, action: str) -> str:
 async def start_polling() -> None:
     telegram_bot_api = Bot(token=core.get_telegram_bot_token(),
                            default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    dp.shutdown.register(core.shutdown)
     await dp.start_polling(telegram_bot_api)
+
+async def stop_polling() -> None:
+    await dp.stop_polling()

@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import log
 
 import requests
@@ -5,6 +7,7 @@ import requests
 import cache
 
 
+@dataclass
 class Movie:
     def __init__(self, _id: int, names: list, year: int):
         self.id = _id
@@ -49,6 +52,9 @@ class Api:
         except Exception as e:
             log.exception(e, _id)
             return []
+
+    def shutdown(self):
+        self._storage.archive()
 
     def _execute_request(self, query: str, page: int = 1, limit: int = 10) -> dict:
         return ((requests.get(f"{self._base_url}/v1.4/movie/search",
