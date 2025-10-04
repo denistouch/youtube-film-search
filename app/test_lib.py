@@ -40,7 +40,8 @@ def assert_equals_cases(cases, as_json=True):
     return decorator
 
 
-def run_tests(_globals: dict, tests_function_prefix=_TEST_PREFIX, logger: logging.Logger = None):
+def run_tests(_globals: dict, tests_function_prefix=_TEST_PREFIX, logger: logging.Logger = None,
+              shutdown_callback: Callable = None):
     if not logger:
         logger = logging.getLogger('tests')
     tests = []
@@ -58,7 +59,13 @@ def run_tests(_globals: dict, tests_function_prefix=_TEST_PREFIX, logger: loggin
         logger.error('Tests ends with errors!')
         for failure in failed:
             logger.exception(repr(failure))
-        return
+        _exit(1, shutdown_callback)
 
     logger.info('All tests passed!')
-    return
+    _exit(0, shutdown_callback)
+
+
+def _exit(result, callback):
+    if callback:
+        callback()
+    exit(result)
