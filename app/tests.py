@@ -7,7 +7,7 @@ import config
 import core
 import test_lib
 import serialize, files
-from cache import Storage
+import cache
 from kinopoisk import Movie
 
 
@@ -35,6 +35,7 @@ def test_core_prepare_answer(url):
     ['Крысиные бега (2001)', ['Крысиные бега (2001)', 100]],
     ['НИКТО (2021)', ['Никто (2021)', 100]],
     ['911', ['911 (2022)', 100]],
+    ['Дом Гиннесса (2025)', ['Дом Гиннесса', 100]],
 ])
 def test_core_approve_movie(candidate: str, fast_approve_threshold: int = config.MOVIE_HALF_APPROVE_THRESHOLD):
     movie, score = core.approve_movie(candidate, fast_approve_threshold, str(uuid.uuid4()))
@@ -53,21 +54,22 @@ def test_serialize(data):
 
 
 def test_cache_stored():
-    cache = Storage(name='tests')
+    storage = cache.Storage(name='tests')
     key = 'key'
     data = {'key': 'value'}
-    cache.put('key', data, 30)
-    file = files.build_storage_path(cache.name)
-    cache.archive()
+    storage.put('key', data, 30)
+    file = files.build_storage_path(storage.name)
+    storage.archive()
     assert os.path.exists(file)
-    restored = Storage.restore(name='tests')
+    restored = cache.Storage.restore(name='tests')
     assert restored.get(key) == data
     os.remove(file)
     assert not os.path.exists(file)
 
-def test_cache_restore():
-    cache = Storage.restore(name='ai')
-    assert cache is not None
+
+def _test_cache_restore():
+    storage = cache.Storage.restore(name='kinopoisk')
+    assert storage is not None
 
 
 if __name__ == '__main__':

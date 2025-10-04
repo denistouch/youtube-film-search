@@ -17,7 +17,7 @@ class Movie:
     def names_with_year(self) -> list[str]:
         names = []
         for name in self.names:
-            names.append(f'{name} ({self.year})')
+            names.append(f'{name}{f' {self.year}' if self.year else ''}')
 
         return names
 
