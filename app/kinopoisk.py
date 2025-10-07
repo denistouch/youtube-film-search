@@ -9,20 +9,29 @@ import cache
 
 @dataclass
 class Movie:
-    def __init__(self, _id: int, names: list, year: int):
+    TYPE_MOVIE = "movie"
+    TYPE_TV_SERIES = "tv-series"
+    TYPE_CARTOON = "cartoon"
+    TYPE_ANIMATED_SERIES = "animated-series"
+    TYPE_ANIME = "anime"
+    def __init__(self, _id: int, names: list, year: int, _type: str = None):
         self.id = _id
         self.names = names
         self.year = year
+        self.type = _type
 
     def names_with_year(self) -> list[str]:
         names = []
         for name in self.names:
-            names.append(f'{name}{f' {self.year}' if self.year else ''}')
+            names.append(f'{name}{f' ({self.year})' if self.year else ''}')
 
         return names
 
     def name_with_year(self) -> str:
         return self.names_with_year()[0]
+
+    def name(self) -> str:
+        return self.names[0]
 
     def as_text_with_link(self) -> str:
         return f"{self.name_with_year()}\nhttps://www.kinopoisk.ru/film/{self.id}"
@@ -49,7 +58,8 @@ class Api:
         try:
             movies = []
             for movie_data in execute(query):
-                movies.append(_parse_movie_data(movie_data))
+                movie = _parse_movie_data(movie_data)
+                movies.append(movie)
 
             return movies
         except Exception as e:
@@ -84,5 +94,6 @@ def _parse_movie_data(movie_data: dict) -> Movie:
     return Movie(
         movie_data.get("id", -1),
         [name for name in alternative_names if name],
-        movie_data.get("year")
+        movie_data.get("year"),
+        movie_data.get("type"),
     )

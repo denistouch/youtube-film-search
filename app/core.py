@@ -10,6 +10,7 @@ import log
 import matcher
 import throttling
 import youtube
+from app import karelia_pro
 
 youtube_api = youtube.Api(
     config.YOUTUBE_API_KEY,
@@ -30,10 +31,15 @@ kinopoisk_api = kinopoisk.Api(
     config.KINOPOISK_API_BASE_URL,
     cache.Storage.restore(config.KINOPOISK_CACHE_TTL_SECONDS, 'kinopoisk')
 )
+karelia_pro_api = karelia_pro.Api(
+    cache.Storage.restore(config.KARELIA_PRO_CACHE_TTL_SECONDS, 'karelia_pro'),
+    throttling.RateLimiter(config.KARELIA_PRO_TIMEOUT_SECONDS),
+    config.KARELIA_PRO_BASE_URL
+)
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
-def prepare_answer(link: str, username: str, _id: str) -> tuple[str | None, str | None]:
+def prepare_answer(link: str, username: str, _id: str, provider: str = None) -> tuple[str | None, str | None]:
     if not (video_id := youtube.parse_video_id_by_link(link)):
         log.warning(mark_action(username, 'video_id not found'), _id)
         return None, config.TELEGRAM_BOT_ERROR_NOT_FOUND_VIDEO_ID
@@ -58,7 +64,7 @@ def prepare_answer(link: str, username: str, _id: str) -> tuple[str | None, str 
     if score < config.MOVIE_HALF_APPROVE_THRESHOLD:
         return None, _build_half_approved_movie_msg(assistant_movie, movie.name_with_year())
 
-    return movie.as_text_with_link(), None
+    return build_with_provider_answer(provider, movie)
 
 
 def _score_log_msg(assistant_movie: str, movie: kinopoisk.Movie | None, score: int, username: str) -> str:
@@ -71,7 +77,7 @@ def approve_movie(candidate: str, fast_approve_threshold: int, _id: str) -> tupl
     if score > fast_approve_threshold:
         return movie, score
 
-    candidate_without_year = _clean_year(candidate)
+    candidate_without_year = clean_year(candidate)
     if candidate_without_year == candidate:
         return movie, score
 
@@ -93,13 +99,16 @@ def get_telegram_bot_token() -> str:
 def mark_action(username: str, action: str) -> str:
     return f'[{username}]: {action}'
 
+
 def shutdown():
     youtube_api.shutdown()
     assistant_api.shutdown()
     kinopoisk_api.shutdown()
+    karelia_pro_api.shutdown()
 
-def _clean_year(candidate):
-    return re.sub(r'\(?\d+\)?', '', candidate)
+
+def clean_year(candidate):
+    return re.sub(r' \(?\d+\)?', '', candidate)
 
 
 def _build_not_approved_movie_msg(assistant_answer: str) -> str:
@@ -133,3 +142,28 @@ def _wrap_assistant_json(summary: youtube.VideoSummary) -> str:
         "owner_comments": "{summary.owner_comments}",
         "top_comments": "{summary.relevant_comments}",
     '''
+
+
+def map_kinopoisk_to_karelia_pro(kinopoisk_type: str) -> str:
+    if kinopoisk_type in [kinopoisk.Movie.TYPE_CARTOON, kinopoisk.Movie.TYPE_ANIMATED_SERIES]:
+        return karelia_pro.Content.TYPE_MULT
+    elif kinopoisk_type in [kinopoisk.Movie.TYPE_TV_SERIES]:
+        return karelia_pro.Content.TYPE_SERIAL
+    elif kinopoisk_type in [kinopoisk.Movie.TYPE_ANIME]:
+        return karelia_pro.Content.TYPE_ANIME
+    else:
+        return karelia_pro.Content.TYPE_VIDEO
+
+
+def build_with_provider_answer(provider: str | None, movie: kinopoisk.Movie) -> tuple[str | None, str | None]:
+    if provider == karelia_pro.PROVIDER:
+        karelia_pro_content = karelia_pro_api.movie_search(movie.name(), map_kinopoisk_to_karelia_pro(movie.type))
+        if karelia_pro_content:
+            return f"{movie.as_text_with_link()}\n{karelia_pro_content.link()}", None
+    return movie.as_text_with_link(), None
+
+
+def get_provider(tg_id) -> str | None:
+    if str(tg_id) in config.KARELIA_PRO_USERS:
+        return karelia_pro.PROVIDER
+    return None
