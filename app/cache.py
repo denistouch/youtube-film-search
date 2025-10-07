@@ -5,7 +5,7 @@ from typing import Dict
 import files, serialize
 
 
-def _sha256_hash(input_string) -> str:
+def sha256_hash(input_string) -> str:
     return hashlib.sha256(input_string.encode('utf-8')).hexdigest()
 
 
@@ -40,7 +40,7 @@ class _StorageItem:
     def is_expired(self) -> bool:
         if self._expired_at:
             return time.time() > self._expired_at
-        return True
+        return False
 
     def extract(self):
         return self._data
@@ -89,7 +89,7 @@ class Storage:
 def with_cache(storage: Storage):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            key = _sha256_hash(_key_by_args(*args, **kwargs))
+            key = sha256_hash(_key_by_args(*args, **kwargs))
             cached = storage.get(key)
 
             if cached is not None:
