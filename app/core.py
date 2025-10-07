@@ -10,7 +10,7 @@ import log
 import matcher
 import throttling
 import youtube
-from app import karelia_pro
+import karelia_pro
 
 youtube_api = youtube.Api(
     config.YOUTUBE_API_KEY,
