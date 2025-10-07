@@ -36,6 +36,9 @@ def test_core_prepare_answer(url):
     ['НИКТО (2021)', ['Никто (2021)', 100]],
     ['911', ['911 (2022)', 100]],
     ['Дом Гиннесса (2025)', ['Дом Гиннесса', 100]],
+    ['ЛЕГО Шазам: Магия и монстры (2020)', ['ЛЕГО Шазам: Магия и монстры (2020)', 100]],
+    ['Les Sisters (2017)', ['Сёстры (2017)', 100]],
+    ['Атака титанов (2013)', ['Атака титанов (2013)', 100]],
 ])
 def test_core_approve_movie(candidate: str, fast_approve_threshold: int = config.MOVIE_HALF_APPROVE_THRESHOLD):
     movie, score = core.approve_movie(candidate, fast_approve_threshold, str(uuid.uuid4()))

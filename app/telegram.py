@@ -24,7 +24,7 @@ async def echo_handler(message: Message) -> None:
     try:
         log.info(_mark_user_action(message, 'send'), _id, message)
         if _url := _extract_url(message):
-            answer, err = core.prepare_answer(_url, message.from_user.username, _id)
+            answer, err = core.prepare_answer(_url, message.from_user.username, _id, core.get_provider(message.from_user.id))
             if err:
                 await message.reply(err)
                 log.warning(_mark_user_action(message, err), _id)
