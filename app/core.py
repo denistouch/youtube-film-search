@@ -157,7 +157,7 @@ def map_kinopoisk_to_karelia_pro(kinopoisk_type: str) -> str:
 
 def build_with_provider_answer(provider: str | None, movie: kinopoisk.Movie) -> tuple[str | None, str | None]:
     if provider == karelia_pro.PROVIDER:
-        karelia_pro_content = karelia_pro_api.movie_search(movie.name(), map_kinopoisk_to_karelia_pro(movie.type))
+        karelia_pro_content = karelia_pro_api.movie_search(movie.name(), map_kinopoisk_to_karelia_pro(movie.type), movie.id)
         if karelia_pro_content:
             return f"{movie.as_text_with_link()}\n{karelia_pro_content.link()}", None
     return movie.as_text_with_link(), None

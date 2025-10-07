@@ -38,17 +38,14 @@ class Api:
         self._limiter = limiter
         self._base_url = base_url
 
-    def movie_search(self, query: str, _type: str) -> Content | None:
+    def movie_search(self, query: str, _type: str, kp_id = None) -> Content | None:
         @throttling.with_limiter(self._limiter)
-        def _search(q, t):
-            return self.perform_query(q, t)
+        def _search(q, t, kp):
+            return self.perform_query(q, t, kp)
 
-        search = _search(query, _type)
-        if len(search) == 0:
-            return None
-        return search[0]
+        return _search(query, _type, kp_id)
 
-    def perform_query(self, query: str, _type: str) -> list[Content]:
+    def perform_query(self, query: str, _type: str, kp_id) -> Content | None:
         url = f"http://{self._base_url}/ajax/search/1"
         params = {
             "query": query,
@@ -70,16 +67,16 @@ class Api:
             response.raise_for_status()
             return response.json()
 
-        contents = []
         response = execute(params)
         for content_data in response.get("videos", []):
-            contents.append(Content(
-                content_data.get('id'),
-                _type,
-                content_data.get('title'),
-            ))
+            if str(content_data.get('kinopoiskId','')) == str(kp_id):
+                return Content(
+                    content_data.get('id'),
+                    _type,
+                    content_data.get('title'),
+                )
 
-        return contents
+        return None
 
     def shutdown(self):
         self._storage.archive()

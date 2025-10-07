@@ -87,14 +87,14 @@ def test_clean_year(candidate):
 
 
 @test_lib.assert_equals_cases([
-    [['F1', Content.TYPE_VIDEO], 'http://video.karelia.pro/updates#video_46597'],
-    [['Игра престолов', Content.TYPE_SERIAL], 'http://serial.karelia.pro/updates#video_14810'],
-    [['Атака титанов', Content.TYPE_ANIME], 'http://anime.karelia.pro/updates#video_17379'],
-    [['Гадкий я', Content.TYPE_MULT], 'http://mult.karelia.pro/updates#video_12076'],
+    [['F1', Content.TYPE_VIDEO, 5003510], 'http://video.karelia.pro/updates#video_46597'],
+    [['Игра престолов', Content.TYPE_SERIAL, 464963], 'http://serial.karelia.pro/updates#video_14810'],
+    [['Атака титанов', Content.TYPE_ANIME, 749374], 'http://anime.karelia.pro/updates#video_17379'],
+    [['Гадкий я', Content.TYPE_MULT, 432724], 'http://mult.karelia.pro/updates#video_12076'],
 ])
 def test_karelia_pro(data):
-    candidate, _type = data
-    actual = core.karelia_pro_api.movie_search(candidate, _type)
+    candidate, _type, kp_id = data
+    actual = core.karelia_pro_api.movie_search(candidate, _type, kp_id)
     return actual.link()
 
 
@@ -135,4 +135,4 @@ def test_build_with_provider(data):
 
 
 if __name__ == '__main__':
-    test_lib.run_tests(copy.copy(globals()), shutdown_callback=core.shutdown)
+    test_lib.run_tests(copy.copy(globals()),'test_karelia_pro', shutdown_callback=core.shutdown)
