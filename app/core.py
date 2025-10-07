@@ -34,6 +34,7 @@ kinopoisk_api = kinopoisk.Api(
 karelia_pro_api = karelia_pro.Api(
     cache.Storage.restore(config.KARELIA_PRO_CACHE_TTL_SECONDS, 'karelia_pro'),
     throttling.RateLimiter(config.KARELIA_PRO_TIMEOUT_SECONDS),
+    config.KARELIA_PRO_BASE_URL
 )
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 

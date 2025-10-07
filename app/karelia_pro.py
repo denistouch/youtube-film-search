@@ -33,9 +33,10 @@ class Api:
         Content.TYPE_MULT: 5,
     }
 
-    def __init__(self, storage: cache.Storage, limiter: throttling.RateLimiter):
+    def __init__(self, storage: cache.Storage, limiter: throttling.RateLimiter, base_url: str):
         self._storage = storage
         self._limiter = limiter
+        self._base_url = base_url
 
     def movie_search(self, query: str, _type: str) -> Content | None:
         @throttling.with_limiter(self._limiter)
@@ -48,7 +49,7 @@ class Api:
         return search[0]
 
     def perform_query(self, query: str, _type: str) -> list[Content]:
-        url = f"http://{_type}.{_DOMAIN}/ajax/search/1"
+        url = f"http://{self._base_url}/ajax/search/1"
         params = {
             "query": query,
             "site": str(self._SITE_BY_TYPE[_type]),
@@ -59,7 +60,8 @@ class Api:
             "Connection": "keep-alive",
             "Referer": f"http://{_type}.{_DOMAIN}/",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-            "X-Requested-With": "XMLHttpRequest"
+            "X-Requested-With": "XMLHttpRequest",
+            "Host": f"{_type}.{_DOMAIN}",
         }
 
         @cache.with_cache(self._storage)
