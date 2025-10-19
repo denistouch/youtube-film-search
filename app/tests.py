@@ -5,8 +5,10 @@ import uuid
 import ai
 import config
 import core
+import strings
 import test_lib
-import serialize, files
+import serialize
+import files
 import cache
 from karelia_pro import Content
 from kinopoisk import Movie
@@ -75,6 +77,7 @@ def _test_cache_restore():
     storage = cache.Storage.restore(name='kinopoisk')
     assert storage is not None
 
+
 @test_lib.assert_equals_cases([
     ['Шазам (2015)', 'Шазам'],
     ['Сёстры', 'Сёстры'],
@@ -83,7 +86,7 @@ def _test_cache_restore():
     ['НИКТО (2021)', 'НИКТО'],
 ])
 def test_clean_year(candidate):
-    return core.clean_year(candidate)
+    return strings.clean_year(candidate)
 
 
 @test_lib.assert_equals_cases([
@@ -121,12 +124,12 @@ def test_map_content_types(kinopoisk_type):
 
 @test_lib.assert_equals_cases([
     [
-        [None, Movie(1, ['Игра престолов'], 2024, core.kinopoisk.Movie.TYPE_TV_SERIES)],
-        f"Игра престолов (2024)\nhttps://www.kinopoisk.ru/film/1"
+        [None, Movie(464963, ['Игра престолов'], 2024, core.kinopoisk.Movie.TYPE_TV_SERIES)],
+        f"Игра престолов (2024)\nhttps://www.kinopoisk.ru/film/464963"
     ],
     [
-        [core.karelia_pro.PROVIDER, Movie(1, ['Игра престолов'], 2024, core.kinopoisk.Movie.TYPE_TV_SERIES)],
-        f"Игра престолов (2024)\nhttps://www.kinopoisk.ru/film/1\nhttp://serial.karelia.pro/updates#video_14810"
+        [core.karelia_pro.PROVIDER, Movie(464963, ['Игра престолов'], 2024, core.kinopoisk.Movie.TYPE_TV_SERIES)],
+        f"Игра престолов (2024)\nhttps://www.kinopoisk.ru/film/464963\nhttp://serial.karelia.pro/updates#video_14810"
     ]
 ])
 def test_build_with_provider(data):
@@ -135,4 +138,4 @@ def test_build_with_provider(data):
 
 
 if __name__ == '__main__':
-    test_lib.run_tests(copy.copy(globals()),'test_karelia_pro', shutdown_callback=core.shutdown)
+    test_lib.run_tests(copy.copy(globals()), shutdown_callback=core.shutdown)

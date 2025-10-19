@@ -14,6 +14,7 @@ def deserialize_base64(data: str) -> Any:
 def serialize_bytes(obj: Any) -> bytes:
     return pickle.dumps(obj)
 
+
 def deserialize_bytes(data: bytes | None) -> Any:
     if data is None:
         return None

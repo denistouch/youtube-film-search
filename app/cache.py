@@ -1,8 +1,9 @@
-import time
 import hashlib
+import time
 from typing import Dict
 
-import files, serialize
+import files
+import serialize
 
 
 def sha256_hash(input_string) -> str:

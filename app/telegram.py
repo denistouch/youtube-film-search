@@ -8,6 +8,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 
 import core
+import strings
 
 dp = Dispatcher()
 
@@ -24,7 +25,8 @@ async def echo_handler(message: Message) -> None:
     try:
         log.info(_mark_user_action(message, 'send'), _id, message)
         if _url := _extract_url(message):
-            answer, err = core.prepare_answer(_url, message.from_user.username, _id, core.get_provider(message.from_user.id))
+            answer, err = core.prepare_answer(_url, message.from_user.username, _id,
+                                              core.get_provider(message.from_user.id))
             if err:
                 await message.reply(err)
                 log.warning(_mark_user_action(message, err), _id)
@@ -44,7 +46,7 @@ def _extract_url(message: Message) -> str | None:
 
 
 def _mark_user_action(message: Message, action: str) -> str:
-    return core.mark_action(message.from_user.username, action)
+    return strings.username_action(message.from_user.username, action)
 
 
 async def start_polling() -> None:
@@ -52,6 +54,7 @@ async def start_polling() -> None:
                            default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp.shutdown.register(core.shutdown)
     await dp.start_polling(telegram_bot_api)
+
 
 async def stop_polling() -> None:
     await dp.stop_polling()
