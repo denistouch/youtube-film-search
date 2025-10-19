@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import requests
 
 import cache
+import log
 import throttling
 
 _USER_AGENT = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -70,14 +71,17 @@ class Api:
             resp.raise_for_status()
             return resp.json()
 
-        response = execute(params)
-        for content_data in response.get("videos", []):
-            if str(content_data.get('kinopoiskId', '')) == str(kp_id):
-                return Content(
-                    content_data.get('id'),
-                    _type,
-                    content_data.get('title'),
-                )
+        try:
+            response = execute(params)
+            for content_data in response.get("videos", []):
+                if str(content_data.get('kinopoiskId', '')) == str(kp_id):
+                    return Content(
+                        content_data.get('id'),
+                        _type,
+                        content_data.get('title'),
+                    )
+        except requests.exceptions.HTTPError as e:
+            log.exception(e, query)
 
         return None
 
