@@ -61,7 +61,7 @@ def run_tests(_globals: dict, tests_function_prefix=_TEST_PREFIX, logger: loggin
             logger.exception(repr(failure))
         _exit(1, shutdown_callback)
 
-    logger.info('All tests passed!')
+    logger.info(f'All {len(tests)} tests passed!')
     _exit(0, shutdown_callback)
 
 

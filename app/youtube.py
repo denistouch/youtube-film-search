@@ -95,6 +95,14 @@ class VideoSummary:
         self.owner_comments = _owner_comments
         self.relevant_comments = _relevant_comments
 
+    def json(self) -> str:
+        return f'''
+            "title": "{self.title}",
+            "description": "{self.description}",
+            "owner_comments": "{self.owner_comments}",
+            "top_comments": "{self.relevant_comments}",
+        '''
+
 
 class Api:
     _youtube = None

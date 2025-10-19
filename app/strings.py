@@ -1,4 +1,5 @@
 import abc
+import re
 from collections import abc
 from dataclasses import is_dataclass, asdict
 from types import SimpleNamespace
@@ -31,3 +32,11 @@ def json(obj: Any) -> Any:
         return [json(item) for item in obj]
 
     return str(obj)
+
+
+def clean_year(candidate):
+    return re.sub(r' \(?\d+\)?', '', candidate)
+
+
+def username_action(username: str, action: str) -> str:
+    return f'[{username}]: {action}'

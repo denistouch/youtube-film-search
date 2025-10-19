@@ -127,6 +127,7 @@ class Assistant:
     def shutdown(self):
         self._api.shutdown()
 
+
 class AssistantException(Exception):
     CODE_MODEL_UNAVAILABLE = 410
     reason: str

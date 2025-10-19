@@ -14,6 +14,7 @@ class Movie:
     TYPE_CARTOON = "cartoon"
     TYPE_ANIMATED_SERIES = "animated-series"
     TYPE_ANIME = "anime"
+
     def __init__(self, _id: int, names: list, year: int, _type: str = None):
         self.id = _id
         self.names = names
@@ -34,7 +35,10 @@ class Movie:
         return self.names[0]
 
     def as_text_with_link(self) -> str:
-        return f"{self.name_with_year()}\nhttps://www.kinopoisk.ru/film/{self.id}"
+        return f"{self.name_with_year()}\n{self.link()}"
+
+    def link(self) -> str:
+        return f"https://www.kinopoisk.ru/film/{self.id}"
 
 
 class Api:
